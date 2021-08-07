@@ -28,7 +28,7 @@ void FFasterManualCraftingModule::StartupModule() {
 		GetProducedCountRef(self) = 0;
 	});
 
-	SUBSCRIBE_METHOD(UFGWorkBench::Produce, [](auto& scope, UFGWorkBench* self, float dt) {
+	SUBSCRIBE_METHOD(UFGWorkBench::TickProducing, [](auto& scope, UFGWorkBench* self, float dt) {
 		scope.Cancel();
 
 		// TurboMode is a global variable, so it shouldn't matter which cheat manager instance we use
@@ -54,8 +54,12 @@ void FFasterManualCraftingModule::StartupModule() {
 
 		self->mCurrentManufacturingProgress += progress;
 		if (self->mCurrentManufacturingProgress >= 1.0f) {
-			if (self->mInventory || (self->mPlayerWorkingAtBench && self->mPlayerWorkingAtBench->GetInventory())) {
-				while (self->mCurrentManufacturingProgress >= 1.0f) {
+			UFGInventoryComponent* inventory = self->mInventory;
+			if (!inventory && self->mPlayerWorkingAtBench)
+				inventory = self->mPlayerWorkingAtBench->GetInventory();
+
+			if(inventory) {
+				while (self->mCurrentManufacturingProgress >= 1.0f && self->CanProduce(self->mCurrentRecipe, inventory)) {
 					self->CraftComplete();
 					self->mCurrentManufacturingProgress -= 1.0f;
 					GetProducedCountRef(self) += 1;
