@@ -3,7 +3,7 @@
 	"Version": 1,
 	"VersionName": "1.0.1",
 	"SemVersion": "1.0.1",
-	"FriendlyName": "FasterManualCrafting",
+	"FriendlyName": "Faster Manual Crafting",
 	"Description": "Gradually speeds up manual crafting - the longer you keep crafting the faster it gets.",
 	"Category": "Modding",
 	"CreatedBy": "Turtlefight",

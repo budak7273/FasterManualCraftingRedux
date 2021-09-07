@@ -5,7 +5,10 @@
 #include "FGWorkBench.h"
 #include "FGCheatManager.h"
 #include "FGGameState.h"
+#include "FGGameMode.h"
 #include "SML/Public/Patching/NativeHookManager.h"
+#include "SML/Public/Patching/BlueprintHookManager.h"
+#include "SML/Public/Patching/BlueprintHookHelper.h"
 
 
 
@@ -17,6 +20,9 @@ static uint16& GetProducedCountRef(UFGWorkBench* bench) {
 	bool* offset = &bench->mIsFatigueEnabled;
 	return *reinterpret_cast<uint16*>(offset + 1);
 }
+
+// Limit for the number of active sparks in Widget_SparkParticles
+static const int32 MaxSparkCount = 100;
 
 void FFasterManualCraftingModule::StartupModule() {
 #if !WITH_EDITOR
@@ -64,12 +70,42 @@ void FFasterManualCraftingModule::StartupModule() {
 					self->mCurrentManufacturingProgress -= 1.0f;
 					GetProducedCountRef(self) += 1;
 				}
+
 				self->mCurrentFatigue = powf(self->mFatigueMultiplier, self->mCounter);
 				self->mCurrentManufacturingProgress = 0.0f;
 			}
 		}
 	});
-#endif
+
+	AFGGameMode* gameModeCDO = GetMutableDefault<AFGGameMode>();
+	SUBSCRIBE_METHOD_VIRTUAL(AFGGameMode::PostLogin, gameModeCDO, [](auto& scope, AFGGameMode* self, APlayerController* playerController) {
+		UBlueprintHookManager* HookManager = GEngine->GetEngineSubsystem<UBlueprintHookManager>();
+		check(HookManager);
+		UClass* WidgetSparkParticlesClass = LoadObject<UClass>(nullptr, TEXT("/Game/FactoryGame/Interface/UI/InGame/-Shared/Widget_SparkParticles.Widget_SparkParticles_C"));
+		check(WidgetSparkParticlesClass);
+		UFunction* CreateSparksFunc = WidgetSparkParticlesClass->FindFunctionByName(TEXT("CreateSparks"));
+		check(CreateSparksFunc);
+
+		HookManager->HookBlueprintFunction(CreateSparksFunc, [](FBlueprintHookHelper& helper) {
+			UObject* context = helper.GetContext();
+
+			int32* numSparksToAdd = helper.GetLocalVarPtr<FIntProperty>(TEXT("NumberOfSparks"));
+			check(numSparksToAdd);
+
+			FObjectProperty* containerProperty = CastFieldChecked<FObjectProperty>(context->GetClass()->FindPropertyByName(TEXT("Container")));
+			check(containerProperty);
+			UObject* containerObj = containerProperty->GetPropertyValue_InContainer(context, 0);
+			UOverlay* container = CastChecked<UOverlay>(containerObj);
+			check(container);
+
+			int32 numExistingSparks = container->GetChildrenCount();
+			if (numExistingSparks > MaxSparkCount) {
+				*numSparksToAdd = 0;
+			}
+		}, EPredefinedHookOffset::Start);
+	});
+
+#endif // !WITH_EDITOR
 }
 
 IMPLEMENT_GAME_MODULE(FFasterManualCraftingModule, FasterManualCrafting);
