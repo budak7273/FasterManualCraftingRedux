@@ -9,4 +9,7 @@ public:
 	virtual void StartupModule() override;
 
 	virtual bool IsGameModule() const override { return true; }
+
+private:
+	static uint16& GetProducedCountRef(class UFGWorkBench* bench);
 };

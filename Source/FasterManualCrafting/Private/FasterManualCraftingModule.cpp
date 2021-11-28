@@ -16,7 +16,8 @@ DEFINE_LOG_CATEGORY(LogFasterManualCrafting);
 
 // There are 3 bytes of padding after mIsFatigueEnabled.
 // We reuse them to store the amount of producted items.
-static uint16& GetProducedCountRef(UFGWorkBench* bench) {
+
+uint16& FFasterManualCraftingModule::GetProducedCountRef(UFGWorkBench* bench) {
 	bool* offset = &bench->mIsFatigueEnabled;
 	return *reinterpret_cast<uint16*>(offset + 1);
 }
