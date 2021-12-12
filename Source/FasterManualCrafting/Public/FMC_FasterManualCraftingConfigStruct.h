@@ -15,6 +15,9 @@ public:
     UPROPERTY(BlueprintReadWrite)
     float MaxSpeedMultiplier;
 
+    UPROPERTY(BlueprintReadWrite)
+    int32 LimitPerTick;
+
     /* Retrieves active configuration value and returns object of this struct containing it */
     static FFMC_FasterManualCraftingConfigStruct GetActiveConfig() {
         FFMC_FasterManualCraftingConfigStruct ConfigStruct{};

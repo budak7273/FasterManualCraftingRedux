@@ -3,6 +3,7 @@
 #include "FMC_FasterManualCraftingConfigStruct.h"
 
 #include "FGWorkBench.h"
+#include "UI/FGManufacturingButton.h"
 #include "FGCheatManager.h"
 #include "FGGameState.h"
 #include "FGGameMode.h"
@@ -27,6 +28,8 @@ static const int32 MaxSparkCount = 100;
 
 void FFasterManualCraftingModule::StartupModule() {
 #if !WITH_EDITOR
+	UFGWorkBench* workBenchCDO = GetMutableDefault<UFGWorkBench>();
+
 	SUBSCRIBE_METHOD(UFGWorkBench::SetRecipe, [](auto& scope, UFGWorkBench* self, TSubclassOf< class UFGRecipe > recipe) {
 		GetProducedCountRef(self) = 0;
 	});
@@ -34,6 +37,12 @@ void FFasterManualCraftingModule::StartupModule() {
 	SUBSCRIBE_METHOD(UFGWorkBench::SetWorkBenchUser, [](auto& scope, UFGWorkBench* self, AFGCharacterPlayer* player) {
 		GetProducedCountRef(self) = 0;
 	});
+
+	SUBSCRIBE_METHOD_VIRTUAL(UFGWorkBench::TickComponent, workBenchCDO, [](auto& scope, UFGWorkBench* self, float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
+		if (self->mManufacturingButton && !self->mManufacturingButton->IsButtonHeld())
+			GetProducedCountRef(self) = 0;
+	});
+
 
 	SUBSCRIBE_METHOD(UFGWorkBench::TickProducing, [](auto& scope, UFGWorkBench* self, float dt) {
 		scope.Cancel();
@@ -66,11 +75,21 @@ void FFasterManualCraftingModule::StartupModule() {
 				inventory = self->mPlayerWorkingAtBench->GetInventory();
 
 			if(inventory) {
-				while (self->mCurrentManufacturingProgress >= 1.0f && self->CanProduce(self->mCurrentRecipe, inventory)) {
+				int productionLimit = fmcConfig.LimitPerTick;
+				if (productionLimit == 0)
+					productionLimit = INT_MAX;
+
+
+				while (self->mCurrentManufacturingProgress >= 1.0f && self->CanProduce(self->mCurrentRecipe, inventory) && productionLimit > 0) {
 					self->CraftComplete();
 					self->mCurrentManufacturingProgress -= 1.0f;
 					GetProducedCountRef(self) += 1;
+					productionLimit--;
 				}
+
+				float floatDummy;
+				if (productionLimit == 0 && self->CanProduce(self->mCurrentRecipe, inventory))
+					self->mCurrentManufacturingProgress = modf(self->mCurrentManufacturingProgress, &floatDummy);
 
 				self->mCurrentFatigue = powf(self->mFatigueMultiplier, self->mCounter);
 				self->mCurrentManufacturingProgress = 0.0f;
