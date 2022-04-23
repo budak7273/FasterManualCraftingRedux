@@ -47,9 +47,13 @@ void FFasterManualCraftingModule::StartupModule() {
 	SUBSCRIBE_METHOD(UFGWorkBench::TickProducing, [](auto& scope, UFGWorkBench* self, float dt) {
 		scope.Cancel();
 
+
+		// FIXME: Experimental changed the cheat manager quite extensively
+		//        So until EA & EXP get merged again we need to disable this
+		//        to make the mod compatible with both versions.
 		// TurboMode is a global variable, so it shouldn't matter which cheat manager instance we use
-		UFGCheatManager* CheatManager = GetMutableDefault<UFGCheatManager>();
-		bool turboMode = CheatManager->TurboMode_Get();
+		// UFGCheatManager* CheatManager = GetMutableDefault<UFGCheatManager>();
+		bool turboMode = false; //  CheatManager->TurboMode_Get();
 
 		float turboModeMultiplier = 1.0f;
 		if (turboMode) {
