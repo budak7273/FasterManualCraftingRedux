@@ -1,0 +1,32 @@
+{
+	"FileVersion": 3,
+	"Version": 2,
+	"VersionName": "2.0.0",
+	"SemVersion": "2.0.0",
+	"FriendlyName": "Faster Manual Crafting Redux",
+	"Description": "Gradually speeds up manual crafting - the longer you keep crafting the faster it gets.",
+	"Category": "Modding",
+	"CreatedBy": "Turtlefight, Robb",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+		  "Name": "FasterManualCraftingRedux",
+		  "Type": "Runtime",
+		  "LoadingPhase": "Default"
+		}
+    ],
+	"Plugins": [
+        {
+            "Name": "SML",
+            "SemVersion": "^3.3.0",
+            "Enabled": true
+        }
+    ]
+}
