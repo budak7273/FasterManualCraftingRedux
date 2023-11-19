@@ -10,23 +10,25 @@ struct FFMC_FasterManualCraftingReduxConfigStruct {
     GENERATED_BODY()
 public:
     UPROPERTY(BlueprintReadWrite)
-    float SpeedMultiplier;
+    float SpeedMultiplier{};
 
     UPROPERTY(BlueprintReadWrite)
-    float MaxSpeedMultiplier;
+    float MaxSpeedMultiplier{};
 
     UPROPERTY(BlueprintReadWrite)
-    int32 LimitPerTick;
+    int32 LimitPerTick{};
 
     UPROPERTY(BlueprintReadWrite)
-    int32 MaxVfxSparkCount;
+    int32 MaxVfxSparkCount{};
 
     /* Retrieves active configuration value and returns object of this struct containing it */
-    static FFMC_FasterManualCraftingReduxConfigStruct GetActiveConfig() {
+    static FFMC_FasterManualCraftingReduxConfigStruct GetActiveConfig(UObject* WorldContext) {
         FFMC_FasterManualCraftingReduxConfigStruct ConfigStruct{};
         FConfigId ConfigId{"FasterManualCraftingRedux", ""};
-        UConfigManager* ConfigManager = GEngine->GetEngineSubsystem<UConfigManager>();
-        ConfigManager->FillConfigurationStruct(ConfigId, FDynamicStructInfo{FFMC_FasterManualCraftingReduxConfigStruct::StaticStruct(), &ConfigStruct});
+        if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull)) {
+            UConfigManager* ConfigManager = World->GetGameInstance()->GetSubsystem<UConfigManager>();
+            ConfigManager->FillConfigurationStruct(ConfigId, FDynamicStructInfo{FFMC_FasterManualCraftingReduxConfigStruct::StaticStruct(), &ConfigStruct});
+        }
         return ConfigStruct;
     }
 };

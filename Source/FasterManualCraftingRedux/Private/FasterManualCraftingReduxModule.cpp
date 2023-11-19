@@ -1,8 +1,10 @@
-
 #include "FasterManualCraftingReduxModule.h"
+
+
 #include "FMC_FasterManualCraftingReduxConfigStruct.h"
 #include "FMCBPLib.h"
 
+#include "Components/Overlay.h"
 
 #include "FGWorkBench.h"
 #include "UI/FGManufacturingButton.h"
@@ -60,7 +62,7 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 			if (gameState) turboModeMultiplier = gameState->mTurboModeMultiplier;
 		}
 
-		auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig();
+		auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(self->GetWorld());
 
 		uint16 producedCount = GetProducedCountRef(self);
 		/*float craftTimeMultiplier = 1.0f + producedCount * fmcConfig.SpeedMultiplier;
@@ -122,7 +124,7 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 			UOverlay* container = CastChecked<UOverlay>(containerObj);
 			check(container);
 
-			auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(); // TODO laggy?
+			auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(context->GetWorld()); // TODO laggy?
 
 			int32 numExistingSparks = container->GetChildrenCount();
 			if (numExistingSparks > fmcConfig.MaxVfxSparkCount) {

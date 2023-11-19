@@ -5,32 +5,46 @@ using System;
 public class FasterManualCraftingRedux : ModuleRules
 {
     public FasterManualCraftingRedux(ReadOnlyTargetRules Target) : base(Target)
-    {
+     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] {
+        // FactoryGame transitive dependencies
+        // Not all of these are required, but including the extra ones saves you from having to add them later.
+        PublicDependencyModuleNames.AddRange(new[] {
             "Core", "CoreUObject",
             "Engine",
+            "DeveloperSettings",
+            "PhysicsCore",
             "InputCore",
-            "OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemNULL",
-            "SignificanceManager",
-            "PhysX", "APEX", "PhysXVehicles", "ApexDestruction",
-            "AkAudio",
-            "ReplicationGraph",
-            "UMG",
-            "AIModule",
-            "NavigationSystem",
-            "AssetRegistry",
-            "GameplayTasks",
+            "GeometryCollectionEngine",
+            "ChaosVehiclesCore", "ChaosSolverEngine",
             "AnimGraphRuntime",
-            "Slate", "SlateCore",
-            "Json"
-            });
+            "AssetRegistry",
+            "NavigationSystem",
+            "AIModule",
+            "GameplayTasks",
+            "SlateCore", "Slate", "UMG",
+            "RenderCore",
+            "CinematicCamera",
+            "Foliage",
+            "EnhancedInput",
+            "NetCore",
+            "GameplayTags",
+		});
 
+        // Header stubs
+        PublicDependencyModuleNames.AddRange(new[] {
+            "DummyHeaders",
+        });
+
+        // Required by ContentLib
+        PublicDependencyModuleNames.AddRange(new[] {
+            "Json",
+        });
 
         if (Target.Type == TargetRules.TargetType.Editor) {
-			PublicDependencyModuleNames.AddRange(new string[] {"OnlineBlueprintSupport", "AnimGraph"});
-		}
+            PublicDependencyModuleNames.AddRange(new string[] {"AnimGraph"});
+        }
         PublicDependencyModuleNames.AddRange(new string[] {"FactoryGame", "SML"});
     }
 }

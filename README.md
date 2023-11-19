@@ -1,6 +1,6 @@
 # Faster Manual Crafting Redux
 
-_U6+ Version of [Faster Manual Crafting](https://ficsit.app/mod/FasterManualCrafting) by Turtlefight_
+_U6+ Version of [Faster Manual Crafting](https://ficsit.app/mod/FasterManualCrafting) by Turtlefight ported by Robb_
 
 This mod will gradually speed up the crafting speed while you're hand crafting.
 Initially, the crafting speed will be the same as the base game, and then continue to become faster for each crafted item.
@@ -52,6 +52,11 @@ Make sure that the client and host have the same config settings, though.
 In case something doesn't work correctly or you encounter a bug,
 please post a report in the modding discord server so I can work on fixing it.
 You can join the modding discord server here: <https://discord.gg/xkVJ73E>
+
+### Known Bugs
+
+* The To-Do list is not updated correctly while crafting
+  (more info [here](https://discord.com/channels/555424930502541343/555782140533407764/1175237863701487648))
 
 ## Future
 
