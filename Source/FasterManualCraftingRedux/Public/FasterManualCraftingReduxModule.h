@@ -20,4 +20,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		static float GetCurrentProductionMultiplier(uint16 producedCount, float speedMultiplier, float maxSpeedMultiplier);
+private:
+	void SetupHooks();
 };

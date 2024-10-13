@@ -27,8 +27,7 @@ uint16& FFasterManualCraftingReduxModule::GetProducedCountRef(UFGWorkBench* benc
 //	return FMath::Clamp(craftTimeMultiplier, 1.0f, maxSpeedMultiplier);
 //}
 
-void FFasterManualCraftingReduxModule::StartupModule() {
-#if !WITH_EDITOR
+void FFasterManualCraftingReduxModule::SetupHooks() {
 	UFGWorkBench* workBenchCDO = GetMutableDefault<UFGWorkBench>();
 
 	SUBSCRIBE_METHOD(UFGWorkBench::SetRecipe, [](auto& scope, UFGWorkBench* self, TSubclassOf< class UFGRecipe > recipe) {
@@ -38,11 +37,29 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 	SUBSCRIBE_METHOD(UFGWorkBench::SetWorkBenchUser, [](auto& scope, UFGWorkBench* self, AFGCharacterPlayer* player) {
 		GetProducedCountRef(self) = 0;
 	});
+	
 
+	// TODO 1.0: !self->mManufacturingButton->IsButtonHeld() check causes a crash when loading into the world
+	// can't find a good replacement
+	// just leaving it for now
+	
+	/*
 	SUBSCRIBE_METHOD_VIRTUAL(UFGWorkBench::TickComponent, workBenchCDO, [](auto& scope, UFGWorkBench* self, float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
-		if (self->mManufacturingButton && !self->mManufacturingButton->IsButtonHeld())
+		//if (self->mManufacturingButton && !self->mManufacturingButton->mIsHolding)
+		//	GetProducedCountRef(self) = 0;
+		// 
+		// doesn't crash but doesn't seem to work
+		// if (self->mManufacturingButton && self->mManufacturingButton->mHoldTime <= 0)
+		//	GetProducedCountRef(self) = 0;
+
+		// doesn't crash but doesn't seem to work
+		if (self->mCurrentCooldown <= 0.01)
 			GetProducedCountRef(self) = 0;
 	});
+	*/
+	
+	
+	
 
 
 	SUBSCRIBE_METHOD(UFGWorkBench::TickProducing, [](auto& scope, UFGWorkBench* self, float dt) {
@@ -65,8 +82,8 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 		auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(self->GetWorld());
 
 		uint16 producedCount = GetProducedCountRef(self);
-		/*float craftTimeMultiplier = 1.0f + producedCount * fmcConfig.SpeedMultiplier;
-		craftTimeMultiplier = FMath::Clamp(craftTimeMultiplier, 1.0f, fmcConfig.MaxSpeedMultiplier);*/
+		// float craftTimeMultiplier = 1.0f + producedCount * fmcConfig.SpeedMultiplier;
+		// craftTimeMultiplier = FMath::Clamp(craftTimeMultiplier, 1.0f, fmcConfig.MaxSpeedMultiplier);
 		float craftTimeMultiplier = UFMCBPLib::GetCurrentProductionMultiplier(producedCount, fmcConfig.SpeedMultiplier, fmcConfig.MaxSpeedMultiplier);
 
 		float progress = (dt / self->mRecipeDuration);
@@ -85,17 +102,20 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 				if (productionLimit == 0)
 					productionLimit = INT_MAX;
 
-
-				while (self->mCurrentManufacturingProgress >= 1.0f && self->CanProduce(self->mCurrentRecipe, inventory) && productionLimit > 0) {
+				int numCrafts = 0;
+				while (self->mCurrentManufacturingProgress >= 1.0f && self->CanProduce(self->mCurrentRecipe, inventory) && numCrafts < productionLimit) {
 					self->CraftComplete();
 					self->mCurrentManufacturingProgress -= 1.0f;
-					GetProducedCountRef(self) += 1;
-					productionLimit--;
+					numCrafts++;
 				}
+				GetProducedCountRef(self) += numCrafts;
 
-				float floatDummy;
-				if (productionLimit == 0 && self->CanProduce(self->mCurrentRecipe, inventory))
-					self->mCurrentManufacturingProgress = modf(self->mCurrentManufacturingProgress, &floatDummy);
+				if (self->mPlayerWorkingAtBench) {
+					AFGPlayerState* PlayerState = self->mPlayerWorkingAtBench->GetPlayerStateChecked<AFGPlayerState>();
+					if (PlayerState) {
+						PlayerState->Client_OnRecipeConstructed(self->mCurrentRecipe, numCrafts);
+					}
+				}
 
 				self->mCurrentFatigue = powf(self->mFatigueMultiplier, self->mCounter);
 				self->mCurrentManufacturingProgress = 0.0f;
@@ -103,6 +123,7 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 		}
 	});
 
+	/*
 	AFGGameMode* gameModeCDO = GetMutableDefault<AFGGameMode>();
 	SUBSCRIBE_METHOD_VIRTUAL(AFGGameMode::PostLogin, gameModeCDO, [](auto& scope, AFGGameMode* self, APlayerController* playerController) {
 		UBlueprintHookManager* HookManager = GEngine->GetEngineSubsystem<UBlueprintHookManager>();
@@ -132,7 +153,12 @@ void FFasterManualCraftingReduxModule::StartupModule() {
 			}
 		}, EPredefinedHookOffset::Start);
 	});
+	*/
+}
 
+void FFasterManualCraftingReduxModule::StartupModule() {
+#if !WITH_EDITOR
+	SetupHooks();
 #endif // !WITH_EDITOR
 }
 
