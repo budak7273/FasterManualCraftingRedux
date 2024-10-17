@@ -123,7 +123,8 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 		}
 	});
 
-	/*
+	// If anyone is looking at this code, hooking PostLogin is a very old approach,
+	// you should use a mod subsystem or game instance module post init instead
 	AFGGameMode* gameModeCDO = GetMutableDefault<AFGGameMode>();
 	SUBSCRIBE_METHOD_VIRTUAL(AFGGameMode::PostLogin, gameModeCDO, [](auto& scope, AFGGameMode* self, APlayerController* playerController) {
 		UBlueprintHookManager* HookManager = GEngine->GetEngineSubsystem<UBlueprintHookManager>();
@@ -153,7 +154,6 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 			}
 		}, EPredefinedHookOffset::Start);
 	});
-	*/
 }
 
 void FFasterManualCraftingReduxModule::StartupModule() {
