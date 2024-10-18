@@ -1,6 +1,5 @@
 #include "FasterManualCraftingReduxModule.h"
 
-
 #include "FMC_FasterManualCraftingReduxConfigStruct.h"
 #include "FMCBPLib.h"
 
@@ -15,17 +14,12 @@
 #include "SML/Public/Patching/BlueprintHookManager.h"
 #include "SML/Public/Patching/BlueprintHookHelper.h"
 
-// DEFINE_LOG_CATEGORY(LogFasterManualCraftingRedux);
+DEFINE_LOG_CATEGORY(LogFasterManualCraftingRedux);
 
 uint16& FFasterManualCraftingReduxModule::GetProducedCountRef(UFGWorkBench* bench) {
 	bool* offset = &bench->mIsFatigueEnabled;
 	return *reinterpret_cast<uint16*>(offset + 1);
 }
-//
-//float FFasterManualCraftingReduxModule::GetCurrentProductionMultiplier(uint16 producedCount, float speedMultiplier, float maxSpeedMultiplier) {
-//	float craftTimeMultiplier = 1.0f + producedCount * speedMultiplier;
-//	return FMath::Clamp(craftTimeMultiplier, 1.0f, maxSpeedMultiplier);
-//}
 
 void FFasterManualCraftingReduxModule::SetupHooks() {
 	UFGWorkBench* workBenchCDO = GetMutableDefault<UFGWorkBench>();
@@ -37,12 +31,10 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 	SUBSCRIBE_METHOD(UFGWorkBench::SetWorkBenchUser, [](auto& scope, UFGWorkBench* self, AFGCharacterPlayer* player) {
 		GetProducedCountRef(self) = 0;
 	});
-	
 
 	// TODO 1.0: !self->mManufacturingButton->IsButtonHeld() check causes a crash when loading into the world
 	// can't find a good replacement
 	// just leaving it for now
-	
 	/*
 	SUBSCRIBE_METHOD_VIRTUAL(UFGWorkBench::TickComponent, workBenchCDO, [](auto& scope, UFGWorkBench* self, float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
 		//if (self->mManufacturingButton && !self->mManufacturingButton->mIsHolding)
@@ -57,10 +49,6 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 			GetProducedCountRef(self) = 0;
 	});
 	*/
-	
-	
-	
-
 
 	SUBSCRIBE_METHOD(UFGWorkBench::TickProducing, [](auto& scope, UFGWorkBench* self, float dt) {
 		scope.Cancel();
@@ -82,8 +70,6 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 		auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(self->GetWorld());
 
 		uint16 producedCount = GetProducedCountRef(self);
-		// float craftTimeMultiplier = 1.0f + producedCount * fmcConfig.SpeedMultiplier;
-		// craftTimeMultiplier = FMath::Clamp(craftTimeMultiplier, 1.0f, fmcConfig.MaxSpeedMultiplier);
 		float craftTimeMultiplier = UFMCBPLib::GetCurrentProductionMultiplier(producedCount, fmcConfig.SpeedMultiplier, fmcConfig.MaxSpeedMultiplier);
 
 		float progress = (dt / self->mRecipeDuration);
@@ -121,38 +107,6 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 				self->mCurrentManufacturingProgress = 0.0f;
 			}
 		}
-	});
-
-	// If anyone is looking at this code, hooking PostLogin is a very old approach,
-	// you should use a mod subsystem or game instance module post init instead
-	AFGGameMode* gameModeCDO = GetMutableDefault<AFGGameMode>();
-	SUBSCRIBE_METHOD_VIRTUAL(AFGGameMode::PostLogin, gameModeCDO, [](auto& scope, AFGGameMode* self, APlayerController* playerController) {
-		UBlueprintHookManager* HookManager = GEngine->GetEngineSubsystem<UBlueprintHookManager>();
-		check(HookManager);
-		UClass* WidgetSparkParticlesClass = LoadObject<UClass>(nullptr, TEXT("/Game/FactoryGame/Interface/UI/InGame/-Shared/Widget_SparkParticles.Widget_SparkParticles_C"));
-		check(WidgetSparkParticlesClass);
-		UFunction* CreateSparksFunc = WidgetSparkParticlesClass->FindFunctionByName(TEXT("CreateSparks"));
-		check(CreateSparksFunc);
-
-		HookManager->HookBlueprintFunction(CreateSparksFunc, [](FBlueprintHookHelper& helper) {
-			UObject* context = helper.GetContext();
-
-			int32* numSparksToAdd = helper.GetLocalVarPtr<FIntProperty>(TEXT("NumberOfSparks"));
-			check(numSparksToAdd);
-
-			FObjectProperty* containerProperty = CastFieldChecked<FObjectProperty>(context->GetClass()->FindPropertyByName(TEXT("Container")));
-			check(containerProperty);
-			UObject* containerObj = containerProperty->GetPropertyValue_InContainer(context, 0);
-			UOverlay* container = CastChecked<UOverlay>(containerObj);
-			check(container);
-
-			auto fmcConfig = FFMC_FasterManualCraftingReduxConfigStruct::GetActiveConfig(context->GetWorld()); // TODO laggy?
-
-			int32 numExistingSparks = container->GetChildrenCount();
-			if (numExistingSparks > fmcConfig.MaxVfxSparkCount) {
-				*numSparksToAdd = 0;
-			}
-		}, EPredefinedHookOffset::Start);
 	});
 }
 
