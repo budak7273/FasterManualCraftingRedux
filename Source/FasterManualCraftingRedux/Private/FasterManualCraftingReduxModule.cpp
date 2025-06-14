@@ -12,7 +12,7 @@
 #include "FGGameMode.h"
 #include "SML/Public/Patching/NativeHookManager.h"
 #include "SML/Public/Patching/BlueprintHookManager.h"
-#include "SML/Public/Patching/BlueprintHookHelper.h"
+//#include "SML/Public/Patching/BlueprintHookHelper.h"
 
 DEFINE_LOG_CATEGORY(LogFasterManualCraftingRedux);
 
@@ -33,8 +33,8 @@ void FFasterManualCraftingReduxModule::SetupHooks() {
 	});
 
 	// TODO 1.0: !self->mManufacturingButton->IsButtonHeld() check causes a crash when loading into the world
-	// can't find a good replacement
-	// just leaving it for now
+	// can't find a good replacement - just leaving it for now
+	// Consequence: letting go of the button no longer loses your craft speed bonus
 	/*
 	SUBSCRIBE_METHOD_VIRTUAL(UFGWorkBench::TickComponent, workBenchCDO, [](auto& scope, UFGWorkBench* self, float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
 		//if (self->mManufacturingButton && !self->mManufacturingButton->mIsHolding)
